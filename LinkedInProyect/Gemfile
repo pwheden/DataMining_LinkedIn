@@ -62,6 +62,9 @@ gem 'json'
 gem 'country_select'
 
 #Gemas para el webcrawler
-
 gem 'mechanize'
 gem 'nokogiri'
+
+#Gem for queueing jobs
+gem 'delayed_job_mongoid'
+

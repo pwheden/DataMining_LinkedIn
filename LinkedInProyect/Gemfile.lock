@@ -47,6 +47,11 @@ GEM
       countries (~> 0.11.0)
       sort_alphabetical (~> 1.0)
     currencies (0.4.2)
+    delayed_job (4.0.6)
+      activesupport (>= 3.0, < 5.0)
+    delayed_job_mongoid (2.1.0)
+      delayed_job (>= 3.0, < 5)
+      mongoid (>= 3.0, < 5)
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
     erubis (2.7.0)
@@ -186,6 +191,7 @@ DEPENDENCIES
   bootstrap-sass (~> 3.2.0.0)
   coffee-rails (~> 4.0.0)
   country_select
+  delayed_job_mongoid
   execjs
   font-awesome-sass
   jbuilder (~> 2.0)
