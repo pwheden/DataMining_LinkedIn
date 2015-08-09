@@ -6,31 +6,51 @@ class IndicesController < ApplicationController
 
  	#Call the crawler function
  	def create
-
- 		crawler = WebCrawler.new
- 		mine_me = MineMe.new
+ 		startjobs = WorkingDyno.new
  		company = params[:index][:company].downcase
  		country = params[:index][:country].downcase
  		url = params[:index][:url]
 
- 		unless User.where(:url => url.downcase).exists?
- 			the_user = mine_me.mining url
- 		end
+ 		startjobs.delay.queueJob company, country, url
+	 	redirect_to :controller => 'similarities', :action => 'thankYouQueueOutput'
 
- 		id = User.where(:url => url.downcase).pluck(:_id)[0].to_s
+ 		#unless User.where(:url => url.downcase).exists?
+ 		#the_user = mine_me.mining url
+ 		#end
 
- 		company_exists = crawler.search company, country
- 		if(company_exists)
- 			@company = company
- 			@country = country
- 			@id = id
+ 		#id = User.where(:url => url.downcase).pluck(:_id)[0].to_s
 
- 			render :confirm_search #this is the same as "indices"
- 		else
-			crawler.crawl company, country
-			redirect_to get_match_url(company, id)
- 		end
+ 		#company_exists = crawler.search company, country
+ 		#if(company_exists)
+ 		#	@company = company
+ 		#	@country = country
+ 		#	@id = id
+
+ 		#	render :confirm_search #this is the same as "indices"
+ 		#else
+ 		#	redirect_to :controller => 'static_pages', :action => 'about'
+		#	crawler.delay.crawl company, country
+			#redirect_to get_match_url(company, id)
+ 		#end
+
+ 		#redirect_to get_match_url(company, id)
+ 		#Should not redirect,  queue similarities.output(company, id), create that page and invoke sendEmailFunction(@email, @id)
  	end
+
+ 	class WorkingDyno
+	 	def queueJob company, country, url
+	 		crawler = WebCrawler.new
+ 			mine_me = MineMe.new
+
+	 		unless User.where(:url => url.downcase).exists?
+	 		the_user = mine_me.mining url
+	 		end
+
+	 		id = User.where(:url => url.downcase).pluck(:_id)[0].to_s
+
+	 		crawler.crawl company, country
+	 	end
+	end
 
  	def accept_crawl
 		company = params[:company]

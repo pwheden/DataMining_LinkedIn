@@ -13,12 +13,19 @@ class SimilaritiesController < ApplicationController
     render :output
   end
 
-  def output
-    company = params[:company]
-    id = params[:id]
+  class GenerateResults
+    def output
+      company = params[:company]
+      id = params[:id]
 
-    sim_skills company
-    sim_empl company, id
+      sim_skills company
+      sim_empl company, id
+    end
+  end
+
+  def thankYouQueueOutput
+    generateResults = GenerateResults.new
+    generateResults.delay.output
   end
 
   def sim_skills company
