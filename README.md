@@ -5,7 +5,7 @@ August 18, 2015.
 ## Idea behind project
 Do you, as a student, have a company that you are really interested in and would like to work for in the future?
 Do you want to know what experience the employees that are in said company have, what school they went to, what skills they possess?
-Lettuce makes use of publicly available information, and help you based on a given company, to find the _skills_ that
+Lettuce makes use of publicly available information, and helps you based on a given company, to find the _skills_ that
 are most common in that company. In addition to that, we find the person most similar to you so that you can have someone
 to compare yourself with. What did he/she do during university? Should I participate more in the student community? Learn Python?
 
