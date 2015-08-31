@@ -11,8 +11,15 @@ class IndicesController < ApplicationController
  		country = params[:index][:country].downcase
  		url = params[:index][:url]
 
+ 		mine_me = MineMe.new
+	 	unless User.where(:url => url.downcase).exists?
+	 	the_user = mine_me.mining url
+	 	end
+	 	id = User.where(:url => url.downcase).pluck(:_id)[0].to_s
+
  		startjobs.delay.queueJob company, country, url
-	 	redirect_to :controller => 'similarities', :action => 'thankYouQueueOutput'
+	 	#redirect_to :controller => 'similarities', :action => 'thankYouQueueOutput'
+	 	redirect_to provideemail_url(company, country, id)
 
  		#unless User.where(:url => url.downcase).exists?
  		#the_user = mine_me.mining url
@@ -40,14 +47,6 @@ class IndicesController < ApplicationController
  	class WorkingDyno
 	 	def queueJob company, country, url
 	 		crawler = WebCrawler.new
- 			mine_me = MineMe.new
-
-	 		unless User.where(:url => url.downcase).exists?
-	 		the_user = mine_me.mining url
-	 		end
-
-	 		id = User.where(:url => url.downcase).pluck(:_id)[0].to_s
-
 	 		crawler.crawl company, country
 	 	end
 	end

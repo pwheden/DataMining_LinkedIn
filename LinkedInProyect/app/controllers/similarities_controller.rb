@@ -5,117 +5,140 @@ class SimilaritiesController < ApplicationController
   end
 
   def create
-    company = params[:similarity][:company].downcase
-    id = params[:similarity][:id]
+    #company = params[:similarity][:company].downcase
+    #id = params[:similarity][:id]
+    #email = params[:similarity][:email]
 
-    sim_skills company
-    sim_empl company, id
-    render :output
+    #sim_skills company
+    #sim_empl company, id
+    #render :output
+    p "http://localhost:5000/similarities/#{@@companytocreate}/#{@@idtocreate}"
+    email = params[:similarity][:email]
+    @providedemail = email
+  end
+
+  #def thankYouQueueOutput company, country, id
+  def thankYouQueueOutput
+    #email = params[:email]
+    company = params[:company]
+    id = params[:id]
+    country = params[:country]
+    email = params[:email]
+    
+    @providedemail = "bla@gmail.bla"
+    #p email
+    generateResults = GenerateResults.new
+    generateResults.delay.output company, id
+  end
+
+  def provideemail
+    company = params[:company]
+    id = params[:id]
+    country = params[:country]
+
+    @similarity = Similarity.new
+    @@companytocreate = company.downcase
+    @@idtocreate = id
+
+    generateResults = GenerateResults.new
+    generateResults.delay.output company, id
   end
 
   class GenerateResults
-    def output
-      company = params[:company]
-      id = params[:id]
+    def sim_skills company
 
+      comp = Company.where(:name => company.to_s).pluck(:_id)[0].to_s
+      empl = User.where(:company_id => comp).pluck(:name, :skill_ids).to_a
+
+      if empl.length > 0
+        skills = [];
+        occurences = [];
+
+        (0...(empl.length)).each do |i|
+          (0...(empl[i][1].to_a.length)).each do |j|
+            unless skills.include?(empl[i][1].to_a[j])
+              skills.push(empl[i][1].to_a[j]);
+              occurences.push(1);
+            else
+              occurences[skills.index(empl[i][1].to_a[j])] += 1;
+            end
+          end
+        end
+
+        total = 0;
+        (0...(occurences.length)).each do |i|
+          total += occurences[i]
+        end
+
+        index = Array.new(skills.length);
+        (0...(index.length)).each do |i|
+          index[i] = [skills[i], occurences[i].to_f/total];
+        end
+
+        indexSort = index.sort_by{|s,n| n }.reverse;
+        @top3 = [];
+
+        (0..2).each do |i|
+          @top3 << Skill.where(:_id => indexSort[i][0])
+        end
+      else
+        @top3 = {}
+      end
+
+    end
+
+
+    def sim_empl company, id
+
+      comp = Company.where(:name => company).pluck(:_id)[0].to_s
+      allEmp = User.where(:company_id => comp).pluck(:name, :skill_ids).to_a
+      myUser = User.where(:_id => id).pluck(:skill_ids).to_a
+
+      if allEmp.length > 0
+
+        countSkills = Array.new(allEmp.length) {0};
+
+        myUser[0].each do |skill|
+          (0...(allEmp.length)).each do |i|
+            if allEmp[i][1].include?(skill)
+              countSkills[i] += 1;
+            end
+          end
+        end
+
+        division = countSkills
+
+        (0...(countSkills.length)).each do |i|
+          puts "***************"
+          puts allEmp[i][0]
+          puts countSkills[i] / (myUser[0].length + allEmp[i][1].length  - division[i]).to_f;
+          countSkills[i] /= (myUser[0].length + allEmp[i][1].length - division[i]).to_f;
+        end
+
+        puts countSkills.max
+
+        max = countSkills.max;
+        bestFit = [];
+        (0...(countSkills.length)).each do |i|
+          if countSkills[i] == max
+            bestFit.push(i)
+          end
+        end
+
+        @theBest = User.where(:name => allEmp[bestFit[0]][0])
+
+        @theSkills = []
+        (0...(allEmp[bestFit[0]][1].length)).each do |i|
+          @theSkills << Skill.where(:_id => allEmp[bestFit[0]][1][i])
+        end
+      end
+
+    end
+
+    def output company, id
       sim_skills company
       sim_empl company, id
     end
-  end
-
-  def thankYouQueueOutput
-    generateResults = GenerateResults.new
-    generateResults.delay.output
-  end
-
-  def sim_skills company
-
-    comp = Company.where(:name => company.to_s).pluck(:_id)[0].to_s
-    empl = User.where(:company_id => comp).pluck(:name, :skill_ids).to_a
-
-    if empl.length > 0
-      skills = [];
-      occurences = [];
-
-      (0...(empl.length)).each do |i|
-        (0...(empl[i][1].to_a.length)).each do |j|
-          unless skills.include?(empl[i][1].to_a[j])
-            skills.push(empl[i][1].to_a[j]);
-            occurences.push(1);
-          else
-            occurences[skills.index(empl[i][1].to_a[j])] += 1;
-          end
-        end
-      end
-
-      total = 0;
-      (0...(occurences.length)).each do |i|
-        total += occurences[i]
-      end
-
-      index = Array.new(skills.length);
-      (0...(index.length)).each do |i|
-        index[i] = [skills[i], occurences[i].to_f/total];
-      end
-
-      indexSort = index.sort_by{|s,n| n }.reverse;
-      @top3 = [];
-
-      (0..2).each do |i|
-        @top3 << Skill.where(:_id => indexSort[i][0])
-      end
-    else
-      @top3 = {}
-    end
-
-  end
-
-
-  def sim_empl company, id
-
-    comp = Company.where(:name => company).pluck(:_id)[0].to_s
-    allEmp = User.where(:company_id => comp).pluck(:name, :skill_ids).to_a
-    myUser = User.where(:_id => id).pluck(:skill_ids).to_a
-
-    if allEmp.length > 0
-
-      countSkills = Array.new(allEmp.length) {0};
-
-      myUser[0].each do |skill|
-        (0...(allEmp.length)).each do |i|
-          if allEmp[i][1].include?(skill)
-            countSkills[i] += 1;
-          end
-        end
-      end
-
-      division = countSkills
-
-      (0...(countSkills.length)).each do |i|
-        puts "***************"
-        puts allEmp[i][0]
-        puts countSkills[i] / (myUser[0].length + allEmp[i][1].length  - division[i]).to_f;
-        countSkills[i] /= (myUser[0].length + allEmp[i][1].length - division[i]).to_f;
-      end
-
-      puts countSkills.max
-
-      max = countSkills.max;
-      bestFit = [];
-      (0...(countSkills.length)).each do |i|
-        if countSkills[i] == max
-          bestFit.push(i)
-        end
-      end
-
-      @theBest = User.where(:name => allEmp[bestFit[0]][0])
-
-      @theSkills = []
-      (0...(allEmp[bestFit[0]][1].length)).each do |i|
-        @theSkills << Skill.where(:_id => allEmp[bestFit[0]][1][i])
-      end
-    end
-
   end
 
 end
